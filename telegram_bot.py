@@ -96,16 +96,6 @@ BẮT BUỘC chỉ xuất ra ĐÚNG 1 trong 4 dạng dưới đây, không đư�
 - MOHO:<câu hỏi làm rõ bằng tiếng Việt> — chỉ khi không thể đoán được cả dòng sản phẩm lẫn màu.
 - NGOAILE (không liên quan kho giày)"""
 
-FORMAT_PROMPT = """Bạn là trợ lý kho hàng giày SYNDER. Dựa vào dữ liệu tồn kho được cung cấp, trả lời ngắn gọn.
-
-BẮT BUỘC: luôn tách riêng TỪNG SIZE thành 1 dòng, không được gộp chung thành "tổng X đôi". Dùng emoji. Ví dụ đúng:
-SD2 đen full còn hàng! 👟
-Size 36: 19 đôi
-Size 37: 7 đôi
-Hết size 42 ❌
-Không bịa số liệu, chỉ dùng dữ liệu được cung cấp."""
-
-
 def _post_abit(endpoint, body):
     body.setdefault("access_token", ABIT_ACCESS_TOKEN)
     body.setdefault("partner_name", PARTNER_NAME)
@@ -228,6 +218,32 @@ def phan_tich_ket_qua(text):
     return None, None
 
 
+def dinh_dang_dong(dong):
+    """Dinh dang 1 dong du lieu kho thanh cau tra loi, HOAN TOAN bang code
+    (khong qua AI) de dam bao so lieu chinh xac tuyet doi, khong bi 'ao giac'."""
+    ma, phan_con_lai = dong.split(":", 1)
+    ma = ma.strip()
+    if "HET HANG" in phan_con_lai:
+        return f"{ma}: Hết hàng toàn bộ ❌"
+
+    phan = phan_con_lai.split("|")
+    chi_tiet = phan[1].strip() if len(phan) > 1 else ""
+    het = phan[2].replace("het:", "").strip() if len(phan) > 2 else ""
+
+    dong_ra = [f"{ma} còn hàng! 👟"]
+    for cap in chi_tiet.split(","):
+        cap = cap.strip()
+        if not cap:
+            continue
+        sz, sl = cap.split("=")
+        dong_ra.append(f"Size {sz.replace('size', '').strip()}: {sl.strip()} đôi")
+    for sz in het.split(","):
+        sz = sz.strip()
+        if sz:
+            dong_ra.append(f"Hết size {sz} ❌")
+    return "\n".join(dong_ra)
+
+
 def hoi_groq(cau_hoi, du_lieu_kho):
     ket_qua = xac_dinh_ma(cau_hoi)
     loai, noidung = phan_tich_ket_qua(ket_qua)
@@ -250,10 +266,7 @@ def hoi_groq(cau_hoi, du_lieu_kho):
     if not dong_khop:
         return f"Không tìm thấy mã {ma} trong kho."
 
-    return _goi_groq([
-        {"role": "system", "content": FORMAT_PROMPT},
-        {"role": "user", "content": f"Dữ liệu kho:\n" + "\n".join(dong_khop) + f"\n\nCâu hỏi: {cau_hoi}"}
-    ])
+    return "\n\n".join(dinh_dang_dong(d) for d in dong_khop)
 
 
 async def start(update, context):
