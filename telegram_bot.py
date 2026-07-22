@@ -23,7 +23,7 @@ ABIT_ACCESS_TOKEN = os.environ["ABIT_ACCESS_TOKEN"]
 ABIT_BASE_URL  = "https://new.abitstore.vn"
 PARTNER_NAME   = "synder1"
 STORE_ID       = 27952
-CACHE_MINUTES  = 5
+CACHE_MINUTES  = 2
 GROQ_URL       = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_STT_URL   = "https://api.groq.com/openai/v1/audio/transcriptions"
 
