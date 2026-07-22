@@ -276,8 +276,8 @@ async def check_stock(update, context):
         du_lieu_kho = lay_du_lieu_kho()
         tra_loi = hoi_groq(cau_hoi, du_lieu_kho)
         await msg.edit_text(tra_loi)
-    except Exception as e:
-        logging.error(f"Loi: {e}")
+    except Exception:
+        logging.exception("Loi check_stock")
         await msg.edit_text("Loi ket noi, thu lai sau it phut.")
 
 
@@ -296,8 +296,8 @@ async def check_stock_voice(update, context):
         du_lieu_kho = lay_du_lieu_kho()
         tra_loi = hoi_groq(cau_hoi, du_lieu_kho)
         await msg.edit_text(f"🎙️ \"{cau_hoi}\"\n\n{tra_loi}")
-    except Exception as e:
-        logging.error(f"Loi voice: {e}")
+    except Exception:
+        logging.exception("Loi check_stock_voice")
         await msg.edit_text("Loi xu ly giong noi, thu lai sau.")
 
 
