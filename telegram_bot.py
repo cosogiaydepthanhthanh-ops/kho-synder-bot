@@ -171,7 +171,7 @@ def chuyen_giong_thanh_chu(file_bytes, file_name="audio.ogg"):
 
 
 def hoi_groq(cau_hoi, du_lieu_kho, retry=3):
-    import time
+    import time, json
     payload = {
         "model": "llama-3.1-8b-instant",
         "messages": [
@@ -179,10 +179,12 @@ def hoi_groq(cau_hoi, du_lieu_kho, retry=3):
             {"role": "user", "content": f"Dữ liệu kho:\n{du_lieu_kho}\n\nCâu hỏi: {cau_hoi}"}
         ]
     }
+    body_size = len(json.dumps(payload).encode("utf-8"))
+    logging.info(f"Groq payload size: {body_size} bytes")
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     for attempt in range(retry):
         r = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
-        if r.status_code == 429 and attempt < retry - 1:
+        if r.status_code in (429, 413) and attempt < retry - 1:
             time.sleep(3)
             continue
         r.raise_for_status()
