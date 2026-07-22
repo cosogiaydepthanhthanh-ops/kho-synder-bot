@@ -88,8 +88,6 @@ DÒNG ĐẶC BIỆT:
 - MEOXAMDEN (mèo xám đen): mèo xám đen, mèo xám đeng, mèo xám đem, meo xám đen, mèu xám đen, mèo sám đen
 - NAUTRASUA (nâu trà sữa): nâu trà sữa, nâu chà sữa, nâu chà sủa, nâu trà sủa, nâu chà sứa, nâu tà sữa, nâu cha sữa
 
-GHI CHÚ PHÁT ÂM: trong câu hỏi về giày, từ "sai" hoặc "xai" (vd "có sai không", "còn sai nào", "sai mấy") thực ra người dùng đang nói "size" (kích cỡ), không phải nghĩa "đúng/sai". Đừng để từ này gây nhầm lẫn — nó không ảnh hưởng gì đến việc xác định mã sản phẩm, chỉ giúp bạn hiểu đúng ý câu hỏi để không bị lạc đề.
-
 NHIỆM VỤ: Xác định mã sản phẩm (dạng CODE-MAU, ví dụ SD2-DENFULL, B1-TRANGDEN) mà người dùng đang hỏi, dựa vào bảng phiên âm trên. Người dùng hay nói sai, phát âm không chuẩn giọng miền Nam — hãy tự suy luận ý nghĩa gần nhất.
 
 BẮT BUỘC chỉ xuất ra ĐÚNG 1 trong 4 dạng dưới đây, không được xuất bất cứ từ nào khác (kể cả chữ "size"):
@@ -191,8 +189,16 @@ def _goi_groq(messages, retry=3):
         return r.json()["choices"][0]["message"]["content"].strip()
 
 
+def chuan_hoa_cau_hoi(cau_hoi):
+    """Thay 'sai'/'xai' (phat am mien Nam cua 'size') thanh 'size' truoc khi gui AI,
+    tranh de AI tu suy luan gay nham lan/lan man."""
+    import re
+    return re.sub(r"\b(sai|xai)\b", "size", cau_hoi, flags=re.IGNORECASE)
+
+
 def xac_dinh_ma(cau_hoi):
     """Chi gui bang phien am (khong gui du lieu kho) de xac dinh ma san pham."""
+    cau_hoi = chuan_hoa_cau_hoi(cau_hoi)
     return _goi_groq([
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": cau_hoi}
