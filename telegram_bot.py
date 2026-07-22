@@ -1,10 +1,11 @@
 """
-Kho SYNDER Telegram Bot - dung Gemini AI
+Kho SYNDER Telegram Bot - dung Gemini API qua HTTP (khong can thu vien nang)
 """
 
 import logging
 import requests
 import os
+import json
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -15,20 +16,17 @@ try:
 except:
     pass
 
-import google.generativeai as genai
+TELEGRAM_TOKEN    = os.environ["TELEGRAM_TOKEN"]
+GEMINI_API_KEY    = os.environ["GEMINI_API_KEY"]
+ABIT_ACCESS_TOKEN = os.environ["ABIT_ACCESS_TOKEN"]
 
-TELEGRAM_TOKEN    = os.environ.get("TELEGRAM_TOKEN", "8797650340:AAHeXBMlb300fzXSLY-rRh7EWnVfZvtR6LE")
-GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY", "AIzaSyD2d6rWf5LSgn0rTAagckEkrRos7fZ3BFQ")
-ABIT_ACCESS_TOKEN = os.environ.get("ABIT_ACCESS_TOKEN", "Y2RmZDRiY2ExYzcyZDQ2Zjc1MzUyNjg3NjJkYjVmMWI=")
-
-ABIT_BASE_URL = "https://new.abitstore.vn"
-PARTNER_NAME  = "synder1"
-STORE_ID      = 27952
-CACHE_MINUTES = 15
+ABIT_BASE_URL  = "https://new.abitstore.vn"
+PARTNER_NAME   = "synder1"
+STORE_ID       = 27952
+CACHE_MINUTES  = 15
+GEMINI_URL     = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.0-flash")
 
 _kho_cache = ""
 _cache_time = None
@@ -94,7 +92,8 @@ def lay_du_lieu_kho():
     return _kho_cache
 
 
-def hoi_ai(cau_hoi, du_lieu_kho):
+def hoi_gemini(cau_hoi, du_lieu_kho):
+    """Goi Gemini API truc tiep qua HTTP, khong can thu vien."""
     prompt = f"""Ban la tro ly kho hang cua cua hang giay SYNDER. Duoi day la toan bo du lieu ton kho hien tai.
 
 Cach doc ma san pham:
@@ -114,8 +113,13 @@ Quy tac tra loi:
 3. Neu khong lien quan den kho hang tra loi: "Toi chi ho tro tra cuu ton kho giay nhe!"
 4. Khong bia dat so lieu chi dung du lieu kho ben tren.
 """
-    response = model.generate_content(prompt)
-    return response.text.strip()
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    r = requests.post(GEMINI_URL, json=payload, timeout=30)
+    r.raise_for_status()
+    data = r.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
 
 
 async def start(update, context):
@@ -136,7 +140,7 @@ async def check_stock(update, context):
     msg = await update.message.reply_text("Dang kiem tra kho...")
     try:
         du_lieu_kho = lay_du_lieu_kho()
-        tra_loi = hoi_ai(cau_hoi, du_lieu_kho)
+        tra_loi = hoi_gemini(cau_hoi, du_lieu_kho)
         await msg.edit_text(tra_loi)
     except Exception as e:
         logging.error(f"Loi: {e}")
