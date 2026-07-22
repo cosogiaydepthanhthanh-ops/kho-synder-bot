@@ -17,14 +17,14 @@ except:
     pass
 
 TELEGRAM_TOKEN    = os.environ["TELEGRAM_TOKEN"]
-GEMINI_API_KEY    = os.environ["GEMINI_API_KEY"]
+GROQ_API_KEY      = os.environ["GROQ_API_KEY"]
 ABIT_ACCESS_TOKEN = os.environ["ABIT_ACCESS_TOKEN"]
 
 ABIT_BASE_URL  = "https://new.abitstore.vn"
 PARTNER_NAME   = "synder1"
 STORE_ID       = 27952
 CACHE_MINUTES  = 15
-GEMINI_URL     = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+GROQ_URL       = "https://api.groq.com/openai/v1/chat/completions"
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -92,8 +92,7 @@ def lay_du_lieu_kho():
     return _kho_cache
 
 
-def hoi_gemini(cau_hoi, du_lieu_kho):
-    """Goi Gemini API truc tiep qua HTTP, khong can thu vien."""
+def hoi_groq(cau_hoi, du_lieu_kho):
     prompt = f"""Ban la tro ly kho hang cua cua hang giay SYNDER. Duoi day la toan bo du lieu ton kho hien tai.
 
 Cach doc ma san pham:
@@ -114,12 +113,13 @@ Quy tac tra loi:
 4. Khong bia dat so lieu chi dung du lieu kho ben tren.
 """
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}]
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}]
     }
-    r = requests.post(GEMINI_URL, json=payload, timeout=30)
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+    r = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     r.raise_for_status()
-    data = r.json()
-    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    return r.json()["choices"][0]["message"]["content"].strip()
 
 
 async def start(update, context):
@@ -140,7 +140,7 @@ async def check_stock(update, context):
     msg = await update.message.reply_text("Dang kiem tra kho...")
     try:
         du_lieu_kho = lay_du_lieu_kho()
-        tra_loi = hoi_gemini(cau_hoi, du_lieu_kho)
+        tra_loi = hoi_groq(cau_hoi, du_lieu_kho)
         await msg.edit_text(tra_loi)
     except Exception as e:
         logging.error(f"Loi: {e}")
