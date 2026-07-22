@@ -107,10 +107,16 @@ Cach doc ma san pham:
 Cau hoi cua nhan vien: {cau_hoi}
 
 Quy tac tra loi:
-1. Neu cau hoi RO RANG tra loi ngay, ngan gon, dung emoji, liet ke size va so luong cu the.
-2. Neu cau hoi CON MO HO hoi nguoc lai de lam ro. Vi du: "Ban hoi mau den full hay den trang vay?"
-3. Neu khong lien quan den kho hang tra loi: "Toi chi ho tro tra cuu ton kho giay nhe!"
-4. Khong bia dat so lieu chi dung du lieu kho ben tren.
+1. Neu cau hoi RO RANG tra loi ngay, ngan gon, dung emoji.
+2. Format tra loi THEO CHIEU DOC, moi size tren mot dong rieng. Vi du:
+   SD2 đen full còn hàng! 👟
+   Size 36: 19 đôi
+   Size 37: 7 đôi
+   Size 38: 6 đôi
+   Hết size 42 ❌
+3. Neu cau hoi CON MO HO hoi nguoc lai de lam ro. Vi du: "Ban hoi mau den full hay den trang vay?"
+4. Neu khong lien quan den kho hang tra loi: "Toi chi ho tro tra cuu ton kho giay nhe!"
+5. Khong bia dat so lieu chi dung du lieu kho ben tren.
 """
     payload = {
         "model": "llama-3.3-70b-versatile",
