@@ -151,6 +151,8 @@ MÀU SẮC / KIỂU:
 - HONG (hồng đơn): hồng, hờn, hùn, hồn, gồng, phòng, hờng, hùng
 - DO (đỏ đơn): đỏ, rỏ, dỏ, đõ, đo, đó, gỏ, ro, do, rõ
 
+- E1-TRANGQUAIDEN (E1 trắng quai đen): e một trắng quai đen, ê một trắng quai đen, i một trắng quai đen, e mộc trắng quai đen, ê mộc chắng quay đen, e một chắng oai đeng, e một trắn quai đen, e mụt chắng quay đem, ê một chắng dây đeng, y một tắng quai đen, ép một trắng quay đeng, e một chắng oai đen, ê mộc tráng quai đeng, i mộc cắn quay đen, e một chắng quai đang, e một tắng oai đen, ê một chắng quai ben, e một trắng dây đen, e một chắng quay đen, e mộc chắng dây đeng
+
 DÒNG ĐẶC BIỆT:
 - CHU3D (chữ 3D): chữ ba đê, chử ba đê, chữ ba đi, chử ba dê, chứ ba đê, trữ ba đê, chữ pa đê, chữ ba lê
 - CHUCONG (chữ cong): chữ cong, chử cong, chữ con, chử con, chứ cong, chữ goong, chữ giong, chữ căng, trữ cong
