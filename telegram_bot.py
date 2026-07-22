@@ -88,16 +88,20 @@ DÒNG ĐẶC BIỆT:
 - MEOXAMDEN (mèo xám đen): mèo xám đen, mèo xám đeng, mèo xám đem, meo xám đen, mèu xám đen, mèo sám đen
 - NAUTRASUA (nâu trà sữa): nâu trà sữa, nâu chà sữa, nâu chà sủa, nâu trà sủa, nâu chà sứa, nâu tà sữa, nâu cha sữa
 
-QUY TẮC TRẢ LỜI:
-1. Người dùng hay nói sai, phát âm không chuẩn giọng miền Nam — hãy dùng bảng phiên âm trên để đoán đúng sản phẩm họ muốn hỏi.
-2. Nếu câu hỏi RÕ RÀNG → trả lời ngay, ngắn gọn, dùng emoji, mỗi size một dòng riêng. Ví dụ:
-   SD2 đen full còn hàng! 👟
-   Size 36: 19 đôi
-   Size 37: 7 đôi
-   Hết size 42 ❌
-3. Nếu CÒN MƠ HỒ → hỏi ngược lại để làm rõ.
-4. Không liên quan kho hàng → "Tôi chỉ hỗ trợ tra cứu tồn kho giày nhé!"
-5. Không bịa số liệu, chỉ dùng dữ liệu kho được cung cấp."""
+NHIỆM VỤ: Xác định mã sản phẩm (dạng CODE-MAU, ví dụ SD2-DENFULL, B1-TRANGDEN) mà người dùng đang hỏi, dựa vào bảng phiên âm trên. Người dùng hay nói sai, phát âm không chuẩn giọng miền Nam — hãy tự suy luận ý nghĩa gần nhất.
+
+TRẢ LỜI DUY NHẤT 1 DÒNG, đúng 1 trong 4 dạng sau, TUYỆT ĐỐI không lặp lại đề bài, không giải thích, không đánh số:
+- MA:CODE-MAU (xác định chính xác 1 mã, ví dụ MA:SD2-DENFULL)
+- MAGOC:CODE (hỏi chung 1 dòng sản phẩm không rõ màu, ví dụ MAGOC:SD2)
+- MOHO:<câu hỏi làm rõ bằng tiếng Việt>
+- NGOAILE (không liên quan kho giày)"""
+
+FORMAT_PROMPT = """Bạn là trợ lý kho hàng giày SYNDER. Dựa vào dữ liệu tồn kho được cung cấp, trả lời câu hỏi ngắn gọn, dùng emoji, mỗi size một dòng riêng. Ví dụ:
+SD2 đen full còn hàng! 👟
+Size 36: 19 đôi
+Size 37: 7 đôi
+Hết size 42 ❌
+Không bịa số liệu, chỉ dùng dữ liệu được cung cấp."""
 
 
 def _post_abit(endpoint, body):
@@ -170,17 +174,9 @@ def chuyen_giong_thanh_chu(file_bytes, file_name="audio.ogg"):
     return r.text.strip()
 
 
-def hoi_groq(cau_hoi, du_lieu_kho, retry=3):
-    import time, json
-    payload = {
-        "model": "llama-3.1-8b-instant",
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Dữ liệu kho:\n{du_lieu_kho}\n\nCâu hỏi: {cau_hoi}"}
-        ]
-    }
-    body_size = len(json.dumps(payload).encode("utf-8"))
-    logging.info(f"Groq payload size: {body_size} bytes")
+def _goi_groq(messages, retry=3):
+    import time
+    payload = {"model": "llama-3.1-8b-instant", "messages": messages}
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     for attempt in range(retry):
         r = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
@@ -189,6 +185,65 @@ def hoi_groq(cau_hoi, du_lieu_kho, retry=3):
             continue
         r.raise_for_status()
         return r.json()["choices"][0]["message"]["content"].strip()
+
+
+def xac_dinh_ma(cau_hoi):
+    """Chi gui bang phien am (khong gui du lieu kho) de xac dinh ma san pham."""
+    return _goi_groq([
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": cau_hoi}
+    ])
+
+
+def loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac):
+    ket_qua = []
+    for dong in du_lieu_kho.split("\n"):
+        ma_dong = dong.split(":", 1)[0].strip()
+        if chinh_xac and ma_dong == ma:
+            ket_qua.append(dong)
+        elif not chinh_xac and (ma_dong == ma or ma_dong.startswith(ma + "-")):
+            ket_qua.append(dong)
+    return ket_qua
+
+
+def phan_tich_ket_qua(text):
+    """Tim dong ket qua CUOI CUNG khop dinh dang, phong khi model lap lai de bai truoc do."""
+    import re
+    if "NGOAILE" in text:
+        return "NGOAILE", None
+    matches = list(re.finditer(r"(MAGOC|MA|MOHO)\s*:\s*(\S.*?)(?:\n|$)", text))
+    if matches:
+        loai, noidung = matches[-1].group(1), matches[-1].group(2).strip()
+        return loai, noidung
+    return None, None
+
+
+def hoi_groq(cau_hoi, du_lieu_kho):
+    ket_qua = xac_dinh_ma(cau_hoi)
+    loai, noidung = phan_tich_ket_qua(ket_qua)
+
+    if loai == "NGOAILE":
+        return "Tôi chỉ hỗ trợ tra cứu tồn kho giày nhé!"
+
+    if loai == "MOHO":
+        return noidung
+
+    if loai == "MAGOC":
+        ma = noidung.split()[0].upper()
+        dong_khop = loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac=False)
+    elif loai == "MA":
+        ma = noidung.split()[0].upper()
+        dong_khop = loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac=True)
+    else:
+        return "Xin lỗi, tôi chưa hiểu rõ câu hỏi. Bạn hỏi lại giúp mình nhé?"
+
+    if not dong_khop:
+        return f"Không tìm thấy mã {ma} trong kho."
+
+    return _goi_groq([
+        {"role": "system", "content": FORMAT_PROMPT},
+        {"role": "user", "content": f"Dữ liệu kho:\n" + "\n".join(dong_khop) + f"\n\nCâu hỏi: {cau_hoi}"}
+    ])
 
 
 async def start(update, context):
