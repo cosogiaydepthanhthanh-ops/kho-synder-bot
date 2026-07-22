@@ -103,7 +103,8 @@ def chuyen_giong_thanh_chu(file_bytes, file_name="audio.ogg"):
     return r.text.strip()
 
 
-def hoi_groq(cau_hoi, du_lieu_kho):
+def hoi_groq(cau_hoi, du_lieu_kho, retry=3):
+    import time
     prompt = f"""Ban la tro ly kho hang cua hang giay SYNDER. Nhân viên nói giọng miền Nam, hay nói sai hoặc phát âm không chuẩn. Hãy tự suy luận ý nghĩa gần nhất để tra kho đúng.
 
 === BẢNG PHIÊN ÂM GIỌNG MIỀN NAM ===
@@ -184,9 +185,13 @@ QUY TẮC TRẢ LỜI:
         "messages": [{"role": "user", "content": prompt}]
     }
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    r = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"].strip()
+    for attempt in range(retry):
+        r = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
+        if r.status_code == 429 and attempt < retry - 1:
+            time.sleep(3)
+            continue
+        r.raise_for_status()
+        return r.json()["choices"][0]["message"]["content"].strip()
 
 
 async def start(update, context):
