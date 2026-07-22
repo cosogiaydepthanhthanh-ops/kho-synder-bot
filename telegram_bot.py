@@ -88,9 +88,11 @@ DÒNG ĐẶC BIỆT:
 - MEOXAMDEN (mèo xám đen): mèo xám đen, mèo xám đeng, mèo xám đem, meo xám đen, mèu xám đen, mèo sám đen
 - NAUTRASUA (nâu trà sữa): nâu trà sữa, nâu chà sữa, nâu chà sủa, nâu trà sủa, nâu chà sứa, nâu tà sữa, nâu cha sữa
 
+GHI CHÚ PHÁT ÂM: trong câu hỏi về giày, từ "sai" hoặc "xai" (vd "có sai không", "còn sai nào", "sai mấy") thực ra người dùng đang nói "size" (kích cỡ), không phải nghĩa "đúng/sai". Đừng để từ này gây nhầm lẫn — nó không ảnh hưởng gì đến việc xác định mã sản phẩm, chỉ giúp bạn hiểu đúng ý câu hỏi để không bị lạc đề.
+
 NHIỆM VỤ: Xác định mã sản phẩm (dạng CODE-MAU, ví dụ SD2-DENFULL, B1-TRANGDEN) mà người dùng đang hỏi, dựa vào bảng phiên âm trên. Người dùng hay nói sai, phát âm không chuẩn giọng miền Nam — hãy tự suy luận ý nghĩa gần nhất.
 
-TRẢ LỜI DUY NHẤT 1 DÒNG, đúng 1 trong 4 dạng sau, TUYỆT ĐỐI không lặp lại đề bài, không giải thích, không đánh số:
+BẮT BUỘC chỉ xuất ra ĐÚNG 1 trong 4 dạng dưới đây, không được xuất bất cứ từ nào khác (kể cả chữ "size"):
 - MA:CODE-MAU — dùng khi câu hỏi CÓ NHẮC ĐẾN MÀU/KIỂU cụ thể (dù phát âm sai), ví dụ "sd2 be đỏ", "b1 trắng đen" → MA:SD2-BEDO, MA:B1-TRANGDEN. Đây là trường hợp phổ biến nhất, ưu tiên dùng dạng này bất cứ khi nào nhận ra được màu.
 - MAGOC:CODE — CHỈ dùng khi câu hỏi KHÔNG nhắc màu nào cả, hỏi liệt kê chung, ví dụ "sd2 có những màu nào", "sd2 còn màu gì". TUYỆT ĐỐI không dùng dạng này nếu câu hỏi đã có nhắc tên màu.
 - MOHO:<câu hỏi làm rõ bằng tiếng Việt> — chỉ khi không thể đoán được cả dòng sản phẩm lẫn màu.
