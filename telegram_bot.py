@@ -1,11 +1,11 @@
 """
-Kho SYNDER Telegram Bot - dung Gemini API qua HTTP (khong can thu vien nang)
+Kho SYNDER Telegram Bot - Groq (Llama 3.3 70B + Whisper)
+Ho tro ca tin nhan text va voice message
 """
 
 import logging
 import requests
 import os
-import json
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -25,6 +25,7 @@ PARTNER_NAME   = "synder1"
 STORE_ID       = 27952
 CACHE_MINUTES  = 15
 GROQ_URL       = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_STT_URL   = "https://api.groq.com/openai/v1/audio/transcriptions"
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -92,6 +93,16 @@ def lay_du_lieu_kho():
     return _kho_cache
 
 
+def chuyen_giong_thanh_chu(file_bytes, file_name="audio.ogg"):
+    """Dung Groq Whisper de chuyen voice message thanh text."""
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}"}
+    files = {"file": (file_name, file_bytes, "audio/ogg")}
+    data = {"model": "whisper-large-v3", "language": "vi", "response_format": "text"}
+    r = requests.post(GROQ_STT_URL, headers=headers, files=files, data=data, timeout=30)
+    r.raise_for_status()
+    return r.text.strip()
+
+
 def hoi_groq(cau_hoi, du_lieu_kho):
     prompt = f"""Ban la tro ly kho hang cua cua hang giay SYNDER. Duoi day la toan bo du lieu ton kho hien tai.
 
@@ -130,8 +141,8 @@ Quy tac tra loi:
 
 async def start(update, context):
     await update.message.reply_text(
-        "Kho SYNDER Bot\n\n"
-        "Hoi tu nhien ve ton kho:\n"
+        "Kho SYNDER Bot 🎙️\n\n"
+        "Hoi bang TIN NHAN hoac GIONG NOI:\n"
         "- sd2 den full con khong?\n"
         "- b1 trang den size 38 con bao nhieu?\n"
         "- sd2 con nhung mau nao?\n\n"
@@ -153,13 +164,34 @@ async def check_stock(update, context):
         await msg.edit_text("Loi ket noi, thu lai sau it phut.")
 
 
+async def check_stock_voice(update, context):
+    msg = await update.message.reply_text("Dang nghe...")
+    try:
+        voice = update.message.voice
+        file = await context.bot.get_file(voice.file_id)
+        file_bytes = bytes(await file.download_as_bytearray())
+
+        await msg.edit_text("Da nghe, dang kiem tra kho...")
+
+        cau_hoi = chuyen_giong_thanh_chu(file_bytes)
+        logging.info(f"Voice -> text: {cau_hoi}")
+
+        du_lieu_kho = lay_du_lieu_kho()
+        tra_loi = hoi_groq(cau_hoi, du_lieu_kho)
+        await msg.edit_text(f"🎙️ \"{cau_hoi}\"\n\n{tra_loi}")
+    except Exception as e:
+        logging.error(f"Loi voice: {e}")
+        await msg.edit_text("Loi xu ly giong noi, thu lai sau.")
+
+
 def main():
     print("Dang tai du lieu kho lan dau...")
     lay_du_lieu_kho()
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_stock))
-    print("Kho SYNDER Bot dang chay!")
+    app.add_handler(MessageHandler(filters.VOICE, check_stock_voice))
+    print("Kho SYNDER Bot dang chay! Ho tro ca text va voice.")
     app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 
