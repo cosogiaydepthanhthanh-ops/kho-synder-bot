@@ -23,7 +23,7 @@ ABIT_ACCESS_TOKEN = os.environ["ABIT_ACCESS_TOKEN"]
 ABIT_BASE_URL  = "https://new.abitstore.vn"
 PARTNER_NAME   = "synder1"
 STORE_ID       = 27952
-CACHE_MINUTES  = 15
+CACHE_MINUTES  = 5
 GROQ_URL       = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_STT_URL   = "https://api.groq.com/openai/v1/audio/transcriptions"
 
@@ -62,7 +62,7 @@ def lay_du_lieu_kho():
     nhom = {}
     for p in all_items:
         code = p.get("productcode", "")
-        sl = int(float(p.get("slton") or 0))
+        sl = max(0, int(float(p.get("slton") or 0)))
         parts = code.rsplit("-", 1)
         if len(parts) == 2 and parts[1].isdigit():
             ma_cha, size = parts[0], parts[1]
