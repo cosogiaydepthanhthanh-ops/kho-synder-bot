@@ -90,6 +90,8 @@ DÒNG ĐẶC BIỆT:
 
 NHIỆM VỤ: Xác định mã sản phẩm (dạng CODE-MAU, ví dụ SD2-DENFULL, B1-TRANGDEN) mà người dùng đang hỏi, dựa vào bảng phiên âm trên. Người dùng hay nói sai, phát âm không chuẩn giọng miền Nam — hãy tự suy luận ý nghĩa gần nhất.
 
+QUAN TRỌNG: nếu câu hỏi đã viết RÕ RÀNG mã dòng sản phẩm bằng chữ cái/số chuẩn (SD1, SD2, SD3, SD2-T, B1, B2, DK, E1 — không phải phiên âm), LUÔN LUÔN dùng đúng mã đó làm CODE, TUYỆT ĐỐI không suy luận/đổi sang dòng khác dù trong câu có từ ngữ nghe giống dòng khác.
+
 BẮT BUỘC chỉ xuất ra ĐÚNG 1 trong 4 dạng dưới đây, không được xuất bất cứ từ nào khác (kể cả chữ "size"):
 - MA:CODE-MAU — dùng khi câu hỏi CÓ NHẮC ĐẾN MÀU/KIỂU cụ thể (dù phát âm sai), ví dụ "sd2 be đỏ", "b1 trắng đen" → MA:SD2-BEDO, MA:B1-TRANGDEN. Đây là trường hợp phổ biến nhất, ưu tiên dùng dạng này bất cứ khi nào nhận ra được màu.
 - MAGOC:CODE — CHỈ dùng khi câu hỏi KHÔNG nhắc màu nào cả, hỏi liệt kê chung, ví dụ "sd2 có những màu nào", "sd2 còn màu gì". TUYỆT ĐỐI không dùng dạng này nếu câu hỏi đã có nhắc tên màu.
@@ -168,7 +170,7 @@ def chuyen_giong_thanh_chu(file_bytes, file_name="audio.ogg"):
 
 def _goi_groq(messages, retry=3):
     import time
-    payload = {"model": "llama-3.1-8b-instant", "messages": messages}
+    payload = {"model": "llama-3.1-8b-instant", "messages": messages, "temperature": 0}
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     for attempt in range(retry):
         r = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
