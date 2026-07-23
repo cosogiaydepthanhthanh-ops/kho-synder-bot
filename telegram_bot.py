@@ -68,7 +68,7 @@ MÀU SẮC / KIỂU:
 - XAMDEN (xám đen): xám đen, xăm đen, xam đen, xám đeng, sám đen, xám đem, sám đem
 - HONGFULL (hồng full): hồng full, hồng phun, hồng phô, hồn phun, hùn phun, hờn phun, gồng phun, phòng phun
 - HONGBE (hồng be): hồng be, hồng bê, hờn be, hùn be, hồn be, gồng be, hồng me, hồng ve, hồng bơ
-- DENBE (đen be): đen be, đên be, đen bê, đeng be, đem be, đen me, đen ve, len be, be đen, bê đen, be đêng, mê đen, ve đen, b đen, be đen mê
+- DENBE (đen be): đen be, đên be, đen bê, đeng be, đem be, đen me, đen ve, len be, be đen, bê đen, be đêng, mê đen, ve đen, b đen, be đen mê. QUY TẮC BẮT BUỘC: hễ câu hỏi có CẢ 2 từ "be" (hoặc bê/mê/ve) VÀ "đen" (bất kể thứ tự trước sau) thì CHẮC CHẮN LÀ DENBE — TUYỆT ĐỐI không được chọn DENFULL trong trường hợp này dù câu có chữ "đen".
 - BELOGOHONG (be logo hồng): be logo hồng, bê logo hồng, be lô gô hồng, bê lô gô hồng, me logo hồng, be lu gu hồng, ve logo hồng, bê rô gô hồng
 - BELOGONAU (be logo nâu): be logo nâu, bê logo nâu, be lô gô nâu, bê lô gô nâu, me logo nâu, ve logo nâu, be rô gô nâu
 - DENWAX (đen wax): đen wax, đen oắc, đen uách, đeng oắc, đen quát, đen oát, đen quắc, đeng quắc, đen goắc, đen goát, đen quất
@@ -253,9 +253,26 @@ def dinh_dang_dong(dong):
     return "\n".join(dong_ra)
 
 
+def sua_mau_khong_on_dinh(cau_hoi_goc, loai, noidung):
+    """AI (temperature=0 van khong dam bao 100% on dinh tren ha tang Groq) doi
+    khi nham giua DENFULL va DENBE cho cung 1 cau hoi. Voi truong hop biet chac
+    chan (co ca tu 'be' VA 'den'), sua lai bang code thay vi tin AI."""
+    import re
+    if loai != "MA" or not noidung:
+        return loai, noidung
+    cau = cau_hoi_goc.lower()
+    co_be = bool(re.search(r"\b(be|bê|mê|ve)\b", cau))
+    co_den = bool(re.search(r"\b(đen|den)\b", cau))
+    if co_be and co_den and "-" in noidung:
+        code = noidung.split("-")[0]
+        return loai, f"{code}-DENBE"
+    return loai, noidung
+
+
 def hoi_groq(cau_hoi, du_lieu_kho):
     ket_qua = xac_dinh_ma(cau_hoi)
     loai, noidung = phan_tich_ket_qua(ket_qua)
+    loai, noidung = sua_mau_khong_on_dinh(cau_hoi, loai, noidung)
 
     if loai == "NGOAILE":
         return "Tôi chỉ hỗ trợ tra cứu tồn kho giày nhé!"
