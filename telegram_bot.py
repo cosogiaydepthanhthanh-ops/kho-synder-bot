@@ -253,26 +253,35 @@ def dinh_dang_dong(dong):
     return "\n".join(dong_ra)
 
 
-def sua_mau_khong_on_dinh(cau_hoi_goc, loai, noidung):
+def sua_mau_khong_on_dinh(cau_hoi_goc, loai, noidung, du_lieu_kho):
     """AI (temperature=0 van khong dam bao 100% on dinh tren ha tang Groq) doi
-    khi nham giua DENFULL va DENBE cho cung 1 cau hoi. Voi truong hop biet chac
-    chan (co ca tu 'be' VA 'den'), sua lai bang code thay vi tin AI."""
+    khi nham giua DENFULL va DENBE cho cung 1 cau hoi. Ngoai ra Abit dat ten
+    KHONG NHAT QUAN giua cac dong: B2 dung 'DENBE' nhung SD2/SD2-T lai dung
+    'BEDEN' (nguoc thu tu) cho CUNG 1 mau. Vi vay khong hardcode 1 ten co dinh,
+    ma tu kiem tra ca 2 bien the trong du lieu kho THAT, dung dung cai ton tai."""
     import re
-    if loai != "MA" or not noidung:
+    if loai != "MA" or not noidung or "-" not in noidung:
         return loai, noidung
     cau = cau_hoi_goc.lower()
     co_be = bool(re.search(r"\b(be|bê|mê|ve)\b", cau))
     co_den = bool(re.search(r"\b(đen|den)\b", cau))
-    if co_be and co_den and "-" in noidung:
-        code = noidung.split("-")[0]
-        return loai, f"{code}-DENBE"
+    if not (co_be and co_den):
+        return loai, noidung
+
+    ma_hop_le = set(dong.split(":", 1)[0].strip() for dong in du_lieu_kho.split("\n"))
+    code_prefix, _, _ = noidung.rpartition("-")
+    if not code_prefix:
+        return loai, noidung
+    for bien_the in (f"{code_prefix}-DENBE", f"{code_prefix}-BEDEN"):
+        if bien_the in ma_hop_le:
+            return loai, bien_the
     return loai, noidung
 
 
 def hoi_groq(cau_hoi, du_lieu_kho):
     ket_qua = xac_dinh_ma(cau_hoi)
     loai, noidung = phan_tich_ket_qua(ket_qua)
-    loai, noidung = sua_mau_khong_on_dinh(cau_hoi, loai, noidung)
+    loai, noidung = sua_mau_khong_on_dinh(cau_hoi, loai, noidung, du_lieu_kho)
 
     if loai == "NGOAILE":
         return "Tôi chỉ hỗ trợ tra cứu tồn kho giày nhé!"
