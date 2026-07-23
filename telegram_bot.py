@@ -68,7 +68,7 @@ MÀU SẮC / KIỂU:
 - XAMDEN (xám đen): xám đen, xăm đen, xam đen, xám đeng, sám đen, xám đem, sám đem
 - HONGFULL (hồng full): hồng full, hồng phun, hồng phô, hồn phun, hùn phun, hờn phun, gồng phun, phòng phun
 - HONGBE (hồng be): hồng be, hồng bê, hờn be, hùn be, hồn be, gồng be, hồng me, hồng ve, hồng bơ
-- DENBE (đen be): đen be, đên be, đen bê, đeng be, đem be, đen me, đen ve, len be
+- DENBE (đen be): đen be, đên be, đen bê, đeng be, đem be, đen me, đen ve, len be, be đen, bê đen, be đêng, mê đen, ve đen, b đen, be đen mê
 - BELOGOHONG (be logo hồng): be logo hồng, bê logo hồng, be lô gô hồng, bê lô gô hồng, me logo hồng, be lu gu hồng, ve logo hồng, bê rô gô hồng
 - BELOGONAU (be logo nâu): be logo nâu, bê logo nâu, be lô gô nâu, bê lô gô nâu, me logo nâu, ve logo nâu, be rô gô nâu
 - DENWAX (đen wax): đen wax, đen oắc, đen uách, đeng oắc, đen quát, đen oát, đen quắc, đeng quắc, đen goắc, đen goát, đen quất
@@ -207,15 +207,22 @@ def loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac):
 
 
 def phan_tich_ket_qua(text):
-    """Tim dong ket qua CUOI CUNG khop dinh dang, phong khi model lap lai de bai truoc do."""
+    """Tim ket qua CUOI CUNG khop dinh dang, phong khi model lap lai de bai hoac
+    giai thich dai dong truoc do. Voi MA/MAGOC chi lay dung phan ma (chu/so/gach
+    ngang), bo qua giai thich thua ngay sau de tranh lay nham rac."""
     import re
     if "NGOAILE" in text:
         return "NGOAILE", None
-    matches = list(re.finditer(r"(MAGOC|MA|MOHO)\s*:\s*(\S.*?)(?:\n|$)", text))
-    if matches:
-        loai, noidung = matches[-1].group(1), matches[-1].group(2).strip()
-        return loai, noidung
-    return None, None
+    ung_vien = []
+    for m in re.finditer(r"(MAGOC|MA)\s*:\s*([A-Za-z0-9\-]+)", text):
+        ung_vien.append((m.start(), m.group(1), m.group(2).strip().rstrip("-")))
+    for m in re.finditer(r"MOHO\s*:\s*(\S.*?)(?:\n|$)", text):
+        ung_vien.append((m.start(), "MOHO", m.group(1).strip()))
+    if not ung_vien:
+        return None, None
+    ung_vien.sort(key=lambda x: x[0])
+    _, loai, noidung = ung_vien[-1]
+    return loai, noidung
 
 
 def dinh_dang_dong(dong):
