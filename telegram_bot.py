@@ -79,11 +79,16 @@ MÀU SẮC / KIỂU:
 - DO (đỏ đơn): đỏ, rỏ, dỏ, đõ, đo, đó, gỏ, ro, do, rõ
 - E1-TRANGQUAIDEN (E1 trắng quai đen): e một trắng quai đen, ê một trắng quai đen, i một trắng quai đen, e mộc trắng quai đen, ê mộc chắng quay đen, e một chắng oai đeng, e một trắn quai đen, e mụt chắng quay đem, ê một chắng dây đeng, y một tắng quai đen, ép một trắng quay đeng, e một chắng oai đen, ê mộc tráng quai đeng, i mộc cắn quay đen, e một chắng quai đang, e một tắng oai đen, ê một chắng quai ben, e một trắng dây đen, e một chắng quay đen, e mộc chắng dây đeng
 
-DÒNG ĐẶC BIỆT:
+DÒNG ĐẶC BIỆT: mã dạng TIENTOMAU-HOATIET (ví dụ BE-CHU3D, DEN-MEO, HONG-VUTRU, TRANG-CHUCONG) — LUÔN GHÉP tiền tố màu VỚI họa tiết, không dùng riêng họa tiết một mình.
+Tiền tố màu: BE (be/bê/me/ve), DEN (đen/đeng/đem/đan/đên), HONG (hồng/hờn/hùn/gồng/phòng), TRANG (trắng/chắng/tắng/trắn/chử)
+Họa tiết:
 - CHU3D (chữ 3D): chữ ba đê, chử ba đê, chữ ba đi, chử ba dê, chứ ba đê, trữ ba đê, chữ pa đê, chữ ba lê
 - CHUCONG (chữ cong): chữ cong, chử cong, chữ con, chử con, chứ cong, chữ goong, chữ giong, chữ căng, trữ cong
 - MEO (mèo): mèo, meo, mèu, mều, mẹo, mẻo, ngoèo, nghèo, méo
 - VUTRU (vũ trụ): vũ trụ, dũ trụ, dũ chụ, vũ chụ, dủ chụ, vủ chụ, vủ trụ, giũ chụ, dụ chụ, vụ chụ
+Ví dụ: "be chữ 3D" → MA:BE-CHU3D; "đen mèo" → MA:DEN-MEO; "hồng vũ trụ" → MA:HONG-VUTRU
+
+Mã độc lập khác (KHÔNG cần ghép tiền tố):
 - KEMREU (kem rêu): kem rêu, kem reu, kem gêu, kem dêu, keng rêu, kem riu, ken rêu, keng dêu
 - MEOXAMDEN (mèo xám đen): mèo xám đen, mèo xám đeng, mèo xám đem, meo xám đen, mèu xám đen, mèo sám đen
 - NAUTRASUA (nâu trà sữa): nâu trà sữa, nâu chà sữa, nâu chà sủa, nâu trà sủa, nâu chà sứa, nâu tà sữa, nâu cha sữa
@@ -129,7 +134,7 @@ def lay_du_lieu_kho():
         code = p.get("productcode", "")
         sl = max(0, int(float(p.get("slton") or 0)))
         parts = code.rsplit("-", 1)
-        if len(parts) == 2 and parts[1].isdigit():
+        if len(parts) == 2 and (parts[1].isdigit() or parts[1].upper() in ("S", "M", "L", "XL", "XXL")):
             ma_cha, size = parts[0], parts[1]
         else:
             ma_cha, size = code, ""
