@@ -163,11 +163,25 @@ def lay_du_lieu_kho():
     return _kho_cache
 
 
+WHISPER_PROMPT = (
+    "Kiểm tra tồn kho giày SYNDER: SD1, SD2, SD2-T, SD3, B1, B2, DK, E1, "
+    "be đỏ, be full, be cam, be nâu, be rêu, be hồng, be đen, đen full, đen trắng, "
+    "trắng đen, xám full, xám đen, hồng full, xanh navy, xanh galaxy, size 36 37 38 39 40 41 42 43 44."
+)
+
+
 def chuyen_giong_thanh_chu(file_bytes, file_name="audio.ogg"):
-    """Dung Groq Whisper de chuyen voice message thanh text."""
+    """Dung Groq Whisper de chuyen voice message thanh text.
+    Tham so 'prompt' goi y truoc tu vung nganh hang de Whisper nhan dang
+    dung chinh ta cac ma san pham/mau sac thay vi doan theo am thanh chung chung."""
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}"}
     files = {"file": (file_name, file_bytes, "audio/ogg")}
-    data = {"model": "whisper-large-v3", "language": "vi", "response_format": "text"}
+    data = {
+        "model": "whisper-large-v3",
+        "language": "vi",
+        "response_format": "text",
+        "prompt": WHISPER_PROMPT,
+    }
     r = requests.post(GROQ_STT_URL, headers=headers, files=files, data=data, timeout=30)
     r.raise_for_status()
     return r.text.strip()
