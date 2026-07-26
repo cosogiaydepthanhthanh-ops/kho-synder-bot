@@ -201,10 +201,13 @@ def _goi_groq(messages, retry=3):
 
 
 def chuan_hoa_cau_hoi(cau_hoi):
-    """Thay 'sai'/'xai' (phat am mien Nam cua 'size') thanh 'size' truoc khi gui AI,
-    tranh de AI tu suy luan gay nham lan/lan man."""
+    """Thay 'sai'/'xai' (phat am mien Nam cua 'size') thanh 'size', va bo cum tu
+    dem "con (hang) khong" o cuoi cau (khong anh huong y nghia san pham, nhung
+    neu khong dau de khien AI (model yeu) bi lan man/suy dien sai)."""
     import re
-    return re.sub(r"\b(sai|xai)\b", "size", cau_hoi, flags=re.IGNORECASE)
+    cau_hoi = re.sub(r"\b(sai|xai)\b", "size", cau_hoi, flags=re.IGNORECASE)
+    cau_hoi = re.sub(r"\s*c[oò]n\s*(h[aà]ng)?\s*kh[oô]ng\s*\??\s*$", "", cau_hoi, flags=re.IGNORECASE)
+    return cau_hoi.strip()
 
 
 def xac_dinh_ma(cau_hoi):
@@ -297,6 +300,28 @@ def sua_mau_khong_on_dinh(cau_hoi_goc, loai, noidung, du_lieu_kho):
     return loai, noidung
 
 
+NHOM_MAU_TUONG_DUONG = [
+    {"XAM", "XAMFULL"},
+    {"DENBE", "BEDEN"},
+]
+
+
+def thu_bien_the_mau(ma, ma_hop_le):
+    """Abit dat ten mau KHONG NHAT QUAN giua cac dong san pham (vd SD1/E1 dung
+    'XAM' nhung SD2/SD3 dung 'XAMFULL' cho cung mot mau). Khi ma chinh xac AI
+    dua ra khong ton tai, thu cac cach dat ten tuong duong khac truoc khi bo cuoc."""
+    code_prefix, _, mau = ma.rpartition("-")
+    if not code_prefix:
+        return None
+    for nhom in NHOM_MAU_TUONG_DUONG:
+        if mau in nhom:
+            for bien_the in nhom:
+                ung_vien = f"{code_prefix}-{bien_the}"
+                if ung_vien in ma_hop_le:
+                    return ung_vien
+    return None
+
+
 def hoi_groq(cau_hoi, du_lieu_kho):
     ket_qua = xac_dinh_ma(cau_hoi)
     loai, noidung = phan_tich_ket_qua(ket_qua)
@@ -308,19 +333,27 @@ def hoi_groq(cau_hoi, du_lieu_kho):
     if loai == "MOHO":
         return noidung
 
+    ghi_chu = ""
     if loai == "MAGOC":
         ma = noidung.split()[0].upper()
         dong_khop = loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac=False)
     elif loai == "MA":
         ma = noidung.split()[0].upper()
         dong_khop = loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac=True)
+        if not dong_khop:
+            ma_hop_le = set(d.split(":", 1)[0].strip() for d in du_lieu_kho.split("\n"))
+            ma_thu = thu_bien_the_mau(ma, ma_hop_le)
+            if ma_thu:
+                ghi_chu = f"(Kho chỉ có {ma_thu}, không có {ma})\n"
+                ma = ma_thu
+                dong_khop = loc_dong_theo_ma(du_lieu_kho, ma, chinh_xac=True)
     else:
         return "Xin lỗi, tôi chưa hiểu rõ câu hỏi. Bạn hỏi lại giúp mình nhé?"
 
     if not dong_khop:
         return f"Không tìm thấy mã {ma} trong kho."
 
-    return "\n\n".join(dinh_dang_dong(d) for d in dong_khop)
+    return ghi_chu + "\n\n".join(dinh_dang_dong(d) for d in dong_khop)
 
 
 async def start(update, context):
